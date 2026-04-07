@@ -1,0 +1,12 @@
+time,event,remaining,spm,bpm,lefts,rights,song
+1773659041293,session started,30:00, -1.00,120.00,0,0,unknown
+1773659041293,ident [beatmove2022@gmail.com 9999 LEFTxiao sense 59ccd RIGHTxiao sense 78a6d],30:00, -1.00,120.00,0,0,unknown
+1773659101372,endmeasure,29:01, 97.51,116.93,0,0,unknown
+1773659101428,start music,29:01, 97.51,116.93,0,0,unknown
+1773659101590,song changed,29:00, 97.51,116.93,0,0,Daft Punk - Lose Yourself to Dance
+1773659168306,song changed,27:54, 79.16,116.93,0,0,Vladimir Cosma - Michel Strogoff
+1773659183638,song changed,27:38, 97.51,116.93,0,0,The Corrs - The Right Time
+1773659341679,walked 5 mn,25:00, 92.92,116.93,0,0,The Corrs - The Right Time
+1773659348870,pause,24:53, 97.22,116.93,0,0,The Corrs - The Right Time
+1773659421905,resume,24:53, 97.22,116.93,0,0,The Corrs - The Right Time
+1773659422514,pause,24:52, 97.22,116.93,0,0,The Corrs - The Right Time

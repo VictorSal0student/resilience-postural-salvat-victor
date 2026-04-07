@@ -1,0 +1,9 @@
+time,event,remaining,spm,bpm,lefts,rights,song
+1773659920715,session started,30:00, -1.00,120.00,0,0,unknown
+1773659920715,ident [beatmove2022@gmail.com 9999 LEFTxiao sense 59ccd RIGHTxiao sense 78a6d],30:00, -1.00,120.00,0,0,unknown
+1773659980792,endmeasure,29:01,102.94,119.17,0,0,unknown
+1773659980847,start music,29:01,102.94,119.17,0,0,unknown
+1773659980880,song changed,29:00,102.94,119.17,0,0,Antonio Vivaldi - L_inverno Four Seasons Concerto no.4
+1773660064579,song changed,27:37, 95.59,119.17,0,0,Caserta - Heaven
+1773660221104,walked 5 mn,25:00, 92.09,119.17,0,0,Caserta - Heaven
+1773660282909,pause,23:59, 92.05,119.17,0,0,Caserta - Heaven
