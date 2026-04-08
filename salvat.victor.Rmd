@@ -313,12 +313,16 @@ library(kableExtra)
       <td style="border: none; padding: 8px 0;">Antoine DUFOURNEAU</td>
     </tr>
     <tr style="border: none;">
+      <td style="border: none; padding: 8px 0;"><strong>Tuteur stage :</strong></td>
+      <td style="border: none; padding: 8px 0;">Loïc DAMM</td>
+    </tr>
+    <tr style="border: none;">
       <td style="border: none; padding: 8px 0;"><strong>Cours :</strong></td>
       <td style="border: none; padding: 8px 0;">Python-R-Git Project</td>
     </tr>
     <tr style="border: none;">
       <td style="border: none; padding: 8px 0;"><strong>Dépôt GitHub :</strong></td>
-      <td style="border: none; padding: 8px 0;"><a href="https://github.com/vsalvat/resilience-postural-salvat-victor" target="_blank" style="color: #667eea; font-weight: 600;">https://github.com/vsalvat/resilience-postural-salvat-victor</a></td>
+      <td style="border: none; padding: 8px 0;"><a href="https://github.com/VictorSal0student/resilience-postural-salvat-victor" target="_blank" style="color: #667eea; font-weight: 600;">https://github.com/VictorSal0student/resilience-postural-salvat-victor</a></td>
     </tr>
   </table>
 </div>
@@ -636,13 +640,19 @@ The developed tools contribute methodologically validated infrastructure to post
 
 # References
 
+Cochen De Cock, V., Dotov, D. G., Ihalainen, P., Bégel, V., Galtier, F., Lebrun, C., Picot, M. C., Driss, V., Landragin, N., Geny, C., Bardy, B., & Dalla Bella, S. (2018). Rhythmic abilities and musical training in Parkinson's disease: Do they help? *npj Parkinson's Disease*, 4, 8. https://doi.org/10.1038/s41531-018-0043-7
+
 Dalla Bella, S., Dotov, D., Bardy, B., & de Cock, V. C. (2018). Individualization of music-based rhythmic auditory cueing in Parkinson's disease. *Annals of the New York Academy of Sciences*, 1423(1), 308-317. https://doi.org/10.1111/nyas.13859
+
+Dotov, D. G., Cochen de Cock, V., Geny, C., Ihalainen, P., Moens, B., Leman, M., Bardy, B., & Dalla Bella, S. (2019). The role of interaction and predictability in the spontaneous entrainment of movement. *Journal of Experimental Psychology: General*, 148(6), 1041-1057. https://doi.org/10.1037/xge0000609
+
+Dufourneau, A. (2024). *Locomotor resilience dataset: Auditory perturbations during treadmill walking* [Unpublished raw data]. EuroMov Digital Health in Motion, University of Montpellier.
 
 Fraser, A. M., & Swinney, H. L. (1986). Independent coordinates for strange attractors from mutual information. *Physical Review A*, 33(2), 1134-1140. https://doi.org/10.1103/PhysRevA.33.1134
 
-Kennel, M. B., Brown, R., & Abarbanel, H. D. I. (1992). Determining embedding dimension for phase-space reconstruction using a geometrical construction. *Physical Review A*, 45(6), 3403-3411. https://doi.org/10.1103/PhysRevA.45.3403
+Huang, N. E., Shen, Z., Long, S. R., Wu, M. C., Shih, H. H., Zheng, Q., Yen, N.-C., Tung, C. C., & Liu, H. H. (1998). The empirical mode decomposition and the Hilbert spectrum for nonlinear and non-stationary time series analysis. *Proceedings of the Royal Society of London. Series A: Mathematical, Physical and Engineering Sciences*, 454(1971), 903-995. https://doi.org/10.1098/rspa.1998.0193
 
-Ravi, D. K., Kumar, N., & Singla, P. (2021). Decoding the complexity of delayed and anticipatory postural adjustments in community-dwelling older adults using machine learning techniques. *Frontiers in Neuroscience*, 15, 654115. https://doi.org/10.3389/fnins.2021.654115
+Kennel, M. B., Brown, R., & Abarbanel, H. D. I. (1992). Determining embedding dimension for phase-space reconstruction using a geometrical construction. *Physical Review A*, 45(6), 3403-3411. https://doi.org/10.1103/PhysRevA.45.3403
 
 Takens, F. (1981). Detecting strange attractors in turbulence. In D. Rand & L. S. Young (Eds.), *Dynamical Systems and Turbulence, Warwick 1980* (Lecture Notes in Mathematics, Vol. 898, pp. 366-381). Springer. https://doi.org/10.1007/BFb0091924
 
@@ -653,6 +663,6 @@ Takens, F. (1981). Detecting strange attractors in turbulence. In D. Rand & L. S
   <p><strong>Victor SALVAT</strong> | Master IEAP | University of Montpellier</p>
   <p>Project Report: EuroMov DHM Laboratory, BeatHealth Project</p>
   <p>January–June 2026 | Supervisors: Dr. S. DALLA BELLA, Dr. D. MOTTET</p>
-  <p><a href="https://github.com/VictorSalvat/resilience-postural" target="_blank">GitHub Repository</a></p>
+  <p><a href="https://github.com/VictorSal0student/resilience-postural-salvat-victor" target="_blank">GitHub Repository</a></p>
 </div>
 ```
