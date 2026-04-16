@@ -24,6 +24,7 @@ import numpy as np
 from scipy.signal import find_peaks
 from typing import Tuple
 import warnings
+from sklearn.neighbors import NearestNeighbors
 
 
 def compute_ami(signal: np.ndarray, max_lag: int = 100, 
@@ -110,7 +111,7 @@ def compute_ami(signal: np.ndarray, max_lag: int = 100,
 
 
 def compute_fnn(signal: np.ndarray, max_dim: int = 10, tau: int = 10,
-                threshold: float = 0.1, r_threshold: float = 15.0) -> Tuple[int, np.ndarray]:
+                threshold: float = 1.0, r_threshold: float = 15.0) -> Tuple[int, np.ndarray]:
     """
     Compute False Nearest Neighbors to determine optimal embedding dimension.
     
@@ -125,8 +126,8 @@ def compute_fnn(signal: np.ndarray, max_dim: int = 10, tau: int = 10,
         Maximum embedding dimension to test
     tau : int, default=10
         Time delay (from AMI)
-    threshold : float, default=0.1
-        FNN percentage threshold (e.g., 0.1 = 10%)
+    threshold : float, default=1.0
+        FNN percentage threshold (e.g., 1.0 = 1%)
     r_threshold : float, default=15.0
         Distance threshold ratio for FNN criterion
     
@@ -159,7 +160,10 @@ def compute_fnn(signal: np.ndarray, max_dim: int = 10, tau: int = 10,
         n_points = len(signal) - dim * tau
         
         # FNN percentage
-        fnn_rates[dim - 1] = fnn_count / max(n_points, 1)
+        if n_points > 0:
+            fnn_rates[dim - 1] = 100.0 * fnn_count / max(n_points, 1)
+        else:
+            fnn_rates[dim - 1] = 100.0
     
     # Find first dimension below threshold
     below_threshold = np.where(fnn_rates < threshold)[0]
@@ -170,33 +174,70 @@ def compute_fnn(signal: np.ndarray, max_dim: int = 10, tau: int = 10,
         # Fallback: use dimension with minimum FNN rate
         dim_optimal = np.argmin(fnn_rates) + 1
         warnings.warn(
-            f"FNN never dropped below {threshold*100}%. "
-            f"Using dim={dim_optimal} (minimum FNN={fnn_rates[dim_optimal-1]:.3f})"
+            f"FNN never dropped below {threshold}%. "
+            f"Using dim={dim_optimal} (minimum FNN={fnn_rates[dim_optimal-1]:.2f}%)"
         )
     
     return dim_optimal, fnn_rates
 
 
 def _compute_fnn_for_dimension(signal: np.ndarray, dim: int, tau: int,
-                                r_threshold: float = 15.0) -> int:
+                                r_threshold: float = 10.0) -> int:
     """
-    Helper function to compute FNN count for a specific dimension.
-    
-    This is a simplified implementation. Full FNN requires:
-    1. Finding nearest neighbors in d dimensions
-    2. Checking if they remain close in d+1 dimensions
-    3. Counting those that become "false" (far away)
+    Compute FNN count for a specific dimension.
+    Uses real k-nearest neighbor search (Antoine's method).
     """
-    # Simplified FNN estimation
-    # Full implementation would use KDTree for neighbor search
+    from sklearn.neighbors import NearestNeighbors
     
-    n_points = len(signal) - dim * tau
+    N = len(signal)
+    max_idx = N - (dim - 1) * tau
     
-    # Estimate based on typical behavior: FNN decreases exponentially with dim
-    # This is a placeholder - full implementation available if needed
-    fnn_estimate = 0.5 * np.exp(-0.5 * dim)
+    if max_idx <= 0:
+        return N  # All points are "false" if we can't embed
     
-    return int(fnn_estimate * n_points)
+    # Construct embedded data matrix
+    embedded_data = np.zeros((max_idx, dim))
+    for i in range(dim):
+        start_idx = i * tau
+        end_idx = start_idx + max_idx
+        embedded_data[:, i] = signal[start_idx:end_idx]
+    
+    # Remove NaN rows
+    valid_rows = ~np.isnan(embedded_data).any(axis=1)
+    embedded_data_clean = embedded_data[valid_rows]
+    base_indices = np.where(valid_rows)[0]
+    
+    if len(embedded_data_clean) < 2:
+        return max_idx
+    
+    # Build k-NN tree
+    nbrs = NearestNeighbors(n_neighbors=2, algorithm='kd_tree').fit(embedded_data_clean)
+    distances, indices = nbrs.kneighbors(embedded_data_clean)
+    
+    # Count false nearest neighbors
+    fnn_count = 0
+    valid_count = 0
+    
+    for i in range(len(embedded_data_clean)):
+        neighbor_idx = indices[i, 1]
+        nearest_dist = distances[i, 1]
+        
+        idx_i = base_indices[i]
+        idx_n = base_indices[neighbor_idx]
+        
+        if (idx_i + dim * tau >= N) or (idx_n + dim * tau >= N):
+            continue
+        if np.isnan(signal[idx_i + dim * tau]) or np.isnan(signal[idx_n + dim * tau]):
+            continue
+        
+        valid_count += 1
+        
+        dist_increased = abs(signal[idx_i + dim * tau] - signal[idx_n + dim * tau])
+        
+        if nearest_dist > 0 and (dist_increased / nearest_dist) > r_threshold:
+            fnn_count += 1
+    
+    return fnn_count if valid_count > 0 else max_idx
 
 
 def phase_space_reconstruction(signal: np.ndarray, tau: int, 
@@ -311,7 +352,7 @@ def auto_tde_parameters(signal: np.ndarray, max_lag: int = 100,
     
     if verbose:
         print(f"  ✓ Optimal dimension: {dim_optimal}")
-        print(f"    FNN at dim: {fnn_rates[dim_optimal-1]:.4f}")
+        print(f"    FNN at dim: {fnn_rates[dim_optimal-1]:.2f}%")
         print(f"\n{'='*70}")
         print(f"OPTIMAL PARAMETERS: tau={tau_optimal}, dim={dim_optimal}")
         print(f"{'='*70}\n")
