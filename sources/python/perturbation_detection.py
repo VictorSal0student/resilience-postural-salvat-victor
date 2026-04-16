@@ -21,6 +21,7 @@ import numpy as np
 from scipy.signal import find_peaks
 from typing import Tuple, Dict, Optional
 import warnings
+import matplotlib.pyplot as plt
 
 
 def detect_beeps(analog_signal: np.ndarray, fs: float = 500.0,
@@ -272,6 +273,74 @@ def validate_perturbations(perturbations: Dict,
         results['fast_valid'] = error < tolerance
     
     return results
+
+def plot_perturbation_detection(beep_times: np.ndarray, perturbations: Dict,
+                                 save_path: Optional[str] = None):
+    """
+    Plot perturbation detection verification (like Antoine's MATLAB).
+    
+    Shows inter-beep intervals with baseline, thresholds, and detected perturbations.
+    
+    Parameters
+    ----------
+    beep_times : np.ndarray
+        Times of beeps (seconds)
+    perturbations : dict
+        Output from detect_perturbations()
+    save_path : str, optional
+        Path to save figure
+    """
+    import matplotlib.pyplot as plt
+    
+    intervals = perturbations['intervals']
+    baseline = perturbations['baseline_interval']
+    
+    # Compute bounds
+    tolerance = 0.15
+    lower_bound = baseline * (1 - tolerance)
+    upper_bound = baseline * (1 + tolerance)
+    
+    # Create figure
+    fig, ax = plt.subplots(figsize=(14, 6))
+    
+    # Plot intervals
+    ax.plot(beep_times[1:], intervals, '-o', linewidth=1.5, markersize=4,
+            color='gray', alpha=0.7, label='Inter-beep intervals')
+    
+    # Baseline and thresholds
+    ax.axhline(baseline, linestyle='--', color='black', linewidth=2,
+               label=f'Baseline ({baseline:.3f}s)')
+    ax.axhline(lower_bound, linestyle=':', color='red', linewidth=2,
+               alpha=0.7, label='Thresholds (±15%)')
+    ax.axhline(upper_bound, linestyle=':', color='red', linewidth=2, alpha=0.7)
+    
+    # Mark perturbations
+    slow_idx = perturbations['slow_idx']
+    fast_idx = perturbations['fast_idx']
+    
+    if slow_idx is not None and slow_idx < len(intervals):
+        ax.plot(beep_times[slow_idx], intervals[slow_idx],
+                'bo', markersize=12, markeredgewidth=2, markerfacecolor='blue',
+                label=f'{perturbations["perturbation_labels"][0]} start')
+    
+    if fast_idx is not None and fast_idx < len(intervals):
+        ax.plot(beep_times[fast_idx], intervals[fast_idx],
+                'ro', markersize=12, markeredgewidth=2, markerfacecolor='red',
+                label=f'{perturbations["perturbation_labels"][1]} start')
+    
+    ax.set_xlabel('Time (s)', fontweight='bold', fontsize=12)
+    ax.set_ylabel('Inter-beep interval (s)', fontweight='bold', fontsize=12)
+    ax.set_title('Detection of Perturbations', fontweight='bold', fontsize=14)
+    ax.legend(loc='best', fontsize=10)
+    ax.grid(True, alpha=0.3)
+    
+    plt.tight_layout()
+    
+    if save_path:
+        plt.savefig(save_path, dpi=300, bbox_inches='tight')
+        print(f"  Saved: {save_path}")
+    
+    return fig
 
 
 # Example usage
