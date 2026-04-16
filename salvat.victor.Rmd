@@ -332,15 +332,15 @@ library(kableExtra)
 
 # Introduction
 
-**Falls** represent a major **public health concern** affecting approximately **one-third of adults aged 65+ years** annually, with consequences ranging from physical injuries to loss of autonomy. Among physiological factors contributing to fall risk, **postural control deterioration** plays a central role. Traditional balance assessment methods such as clinical scales and static posturography provide valuable but limited insights, often failing to capture **dynamic complexity of real-world perturbations**.
+**Falls** represent a major **public health concern** affecting approximately **one-third of adults aged 65+ years** annually (World Health Organization, 2021), with consequences ranging from physical injuries to loss of autonomy. Among physiological factors contributing to fall risk, **postural control deterioration** plays a central role (Horak, 2006). Traditional balance assessment methods such as clinical scales and static posturography provide valuable but limited insights, often failing to capture **dynamic complexity of real-world perturbations** (Mancini & Horak, 2010).
 
-**Postural resilience**, defined as the ability to recover stability following unexpected perturbations, has emerged as a **critical marker of functional balance capacity** in aging populations. **Time-Delay Embedding (TDE)** offers a mathematical framework derived from dynamical systems theory that reconstructs the underlying **attractor governing postural control** from univariate time series measurements. The TDE approach, formalized by **Takens' embedding theorem**, enables **state-space reconstruction** from a single measured variable by creating delayed copies of the signal, revealing geometric structure of system dynamics.
+**Postural resilience**, defined as the ability to recover stability following unexpected perturbations, has emerged as a **critical marker of functional balance capacity** in aging populations (Bruijn et al., 2013). **Time-Delay Embedding (TDE)** offers a mathematical framework derived from dynamical systems theory that reconstructs the underlying **attractor governing postural control** from univariate time series measurements. The TDE approach, formalized by **Takens' embedding theorem** (Takens, 1981), enables **state-space reconstruction** from a single measured variable by creating delayed copies of the signal, revealing geometric structure of system dynamics.
 
-Two critical parameters govern reconstruction quality: **time delay (τ)** determining temporal spacing between embedded dimensions, and **embedding dimension (dim)** specifying reconstructed space dimensionality. Optimal parameter selection ensures **accurate representation** while avoiding spurious correlations or insufficient dimensional representation.
+Two critical parameters govern reconstruction quality: **time delay (τ)** determining temporal spacing between embedded dimensions, and **embedding dimension (dim)** specifying reconstructed space dimensionality. Optimal parameter selection (Fraser & Swinney, 1986; Kennel et al., 1992) ensures **accurate representation** while avoiding spurious correlations or insufficient dimensional representation.
 
-This project was conducted during a **Master's internship** at the **EuroMov Digital Health in Motion Laboratory** as part of the **BeatHealth research initiative**. The primary objective was to develop, validate, and deploy an **automated Time-Delay Embedding analysis pipeline** for processing motion capture data from perturbation experiments and extracting **quantitative resilience metrics**. A secondary objective involved validating a **synchronization framework** for integrating CODAMOTION optical motion capture with BeatMove inertial measurement recordings.
+This project was conducted during a **Master's internship** at the **EuroMov Digital Health in Motion Laboratory** as part of the **BeatHealth research initiative**. The primary objective was to develop, validate, and deploy an **automated Time-Delay Embedding analysis pipeline** for processing motion capture data from perturbation experiments and extracting **quantitative resilience metrics**. A secondary objective involved validating a **synchronization framework** for integrating Codamotion optical motion capture with BeatMove inertial measurement recordings.
 
-The present report documents pipeline development, validation on **seven participants (five young adults, two aging adults)**, and synchronization testing on two technical validation sessions. Results demonstrate successful **automated parameter optimization**, robust **perturbation detection**, and significant **recovery time differences between age groups** consistent with established literature.
+The present report documents pipeline development and validation on **seven participants (five young adults, two aging adults)**, and synchronization testing on two technical validation sessions.
 
 ---
 
@@ -352,28 +352,30 @@ The study cohort comprised **seven healthy adults** divided into two groups: **f
 
 ## Experimental Protocol
 
-The experimental protocol employed auditory perturbations designed to elicit postural recovery responses. Participants stood on a motorized treadmill maintaining comfortable upright stance while the treadmill belt advanced at constant velocity (0.3 m/s). Two types of unexpected auditory perturbations were delivered at randomized intervals: **slow perturbations** consisting of low-frequency beeps (gradual tempo decrease), and **fast perturbations** involving high-frequency beeps (abrupt tempo increase). Each participant completed a single recording session comprising approximately 8-10 perturbations of each type distributed across a 6-minute acquisition period.
+The experimental protocol employed auditory perturbations designed to elicit postural recovery responses. Participants walked **overground** in a rectangular path (**8 × 2.5 m**) following a **clockwise direction** at self-selected comfortable pace. Two types of unexpected auditory perturbations were delivered at randomized intervals: **slow perturbations** consisting of low-frequency beeps (gradual tempo decrease), and **fast perturbations** involving high-frequency beeps (abrupt tempo increase). Each participant completed a single recording session comprising approximately 8-10 perturbations of each type distributed across a 6-minute acquisition period.
 
-Participants were instructed to maintain natural upright stance, avoid anticipatory adjustments, and respond naturally to auditory cues without stepping off the treadmill. Visual feedback was minimized by having participants focus on a wall-mounted target positioned at eye level 2 meters anterior. No practice trials were provided to preserve perturbation unexpectedness.
+Participants were instructed to maintain **natural walking pace**, avoid anticipatory adjustments, and respond naturally to auditory cues. Visual feedback was minimized by having participants focus on a **wall-mounted target** positioned at eye level. No practice trials were provided to preserve **perturbation unexpectedness**.
+
+**The TDE analysis pipeline was implemented in Python, adapted from the original MATLAB methodology developed by Antoine Dufourneau (Dufourneau, 2025).**
 
 ## Data Acquisition Systems
 
-Two distinct acquisition protocols were employed: TDE analysis on N=7 participants using CODAMOTION alone, and synchronization validation on two technical sessions using CODAMOTION plus BeatMove.
+Two distinct acquisition protocols were employed: TDE analysis on N=7 participants using Codamotion alone, and synchronization validation on two technical sessions using Codamotion plus BeatMove.
 
-### CODAMOTION Optical Motion Capture (N=7 TDE Protocol)
+### Codamotion Optical Motion Capture (N=7 TDE Protocol)
 
-Three-dimensional kinematic data were recorded using a **CODAMOTION active marker system** (Charnwood Dynamics Ltd, UK) comprising four CX1 scanner units positioned at corners of a 4-meter capture volume. The system tracked infrared LED markers with **submillimeter spatial precision** at **400 Hz native sampling frequency**. A single marker positioned at the **sacrum approximating body center of mass** was utilized as the primary measurement variable. Raw marker trajectories were exported as **C3D binary files** containing timestamped three-dimensional position vectors in the laboratory reference frame (X: anterior-posterior, Y: medio-lateral, Z: vertical).
+Three-dimensional kinematic data were recorded using a **Codamotion active marker system** (Charnwood Dynamics Ltd, UK) comprising four CX1 scanner units positioned at corners of a 4-meter capture volume. The system tracked infrared LED markers with **submillimeter spatial precision** at **400 Hz native sampling frequency**. A single marker positioned at the **sacrum approximating body center of mass** was utilized as the primary measurement variable. Raw marker trajectories were exported as **C3D binary files** containing timestamped three-dimensional position vectors in the laboratory reference frame (X: anterior-posterior, Y: medio-lateral, Z: vertical).
 
 ### BeatMove Inertial Measurement (Synchronization Validation Only)
 
-For synchronization validation sessions (participants **016 and 017**), complementary inertial data were acquired using the **BeatMove smartphone application** recording triaxial accelerometer signals at **100 Hz** from a device secured to the participant's lower back. BeatMove provided **real-time step detection** and exported data as CSV files with timestamped acceleration vectors. This **dual-sensor setup** validated the synchronization framework required for future studies incorporating **adaptive auditory feedback**, but was not used during the N=7 TDE analysis.
+For synchronization validation sessions (participants **016 and 017**), complementary inertial data were acquired using the **BeatMove smartphone application** recording triaxial accelerometer signals at **100 Hz** from a device secured to the **participant's lower back**. BeatMove provided **real-time step detection** and exported data as CSV files with timestamped acceleration vectors. This **dual-sensor setup** validated the synchronization framework required for future studies incorporating **adaptive auditory feedback**, but was not used during the N=7 TDE analysis.
 
 ## Time-Delay Embedding Pipeline
 
 ```{=html}
 <div class="pipeline-flowchart">
   <div class="pipeline-step">
-    <div class="step-box">Raw Data<br><small>CODAMOTION 400 Hz</small></div>
+    <div class="step-box">Raw Data<br><small>Codamotion 400 Hz</small></div>
     <div class="arrow">→</div>
   </div>
   <div class="pipeline-step">
@@ -443,7 +445,7 @@ For synchronization validation sessions (participants **016 and 017**), compleme
 
 The preprocessing pipeline began with sacrum marker anterior-posterior displacement extracted from C3D files (400 Hz native frequency). Three sequential stages isolated postural control dynamics from measurement artifacts:
 
-**Stage 1 - Empirical Mode Decomposition (EMD):** The raw 400 Hz signal was decomposed into **intrinsic mode functions (IMFs)** representing oscillatory components at different temporal scales. EMD **adaptively separates signals** based on local extrema without predetermined basis functions. The **two highest-frequency IMFs** (measurement noise, physiological tremor) were discarded; remaining IMFs were summed to reconstruct a **denoised signal**.
+**Stage 1 - Empirical Mode Decomposition (EMD):** The raw 400 Hz signal was decomposed into **intrinsic mode functions (IMFs)** representing oscillatory components at different temporal scales. EMD **adaptively separates signals** based on local extrema without predetermined basis functions. The **two highest-frequency IMFs** (measurement noise, physiological tremor) were discarded; remaining IMFs were summed to reconstruct a **denoised signal**. This preprocessing step improves **signal stationarity**, a critical prerequisite for reliable state-space reconstruction, by removing non-stationary high-frequency artifacts that could distort attractor geometry.
 
 **Stage 2 - Butterworth Filtering:** A **fourth-order Butterworth lowpass filter** with **5 Hz cutoff frequency** was applied to the EMD-reconstructed signal at 400 Hz. The **5 Hz threshold** preserves postural control relevant frequencies while attenuating high-frequency noise. Butterworth design provides **maximally flat passband characteristics** minimizing signal distortion.
 
@@ -453,25 +455,25 @@ The preprocessing pipeline began with sacrum marker anterior-posterior displacem
 
 Optimal TDE parameters were determined using established nonlinear time series methods. **Time delay (τ)** was selected via **Average Mutual Information (AMI)** analysis following Fraser and Swinney (1986). AMI quantifies **statistical dependence** between the original signal and its time-delayed copy as a function of delay lag. Optimal τ corresponds to the **first local minimum** of the AMI function, representing the delay providing **maximal new information** while maintaining dynamical relevance.
 
-**Embedding dimension (dim)** was determined using **False Nearest Neighbors (FNN)** method developed by Kennel et al. (1992). FNN identifies the **minimum dimension required** to unfold the attractor by detecting **spurious nearest neighbors** from insufficient dimensionality. Optimal dim corresponds to the dimension where **false neighbor percentage drops below 10%**.
+**Embedding dimension (dim)** was determined using **False Nearest Neighbors (FNN)** method developed by Kennel et al. (1992). FNN identifies the **minimum dimension required** to unfold the attractor by detecting **spurious nearest neighbors** from insufficient dimensionality. Optimal dim corresponds to the dimension where **false neighbor percentage drops below 1%**.
 
-For participant **004 (validation case)**, AMI analysis yielded **optimal τ = 19 samples (0.19 seconds at 100 Hz)**. FNN analysis indicated **optimal dim = 4**. These parameters were applied to **all participants** assuming similar postural control dynamics across healthy adults.
+For participant **004 (validation case)**, AMI analysis yielded **optimal τ = 19 samples (0.19 seconds at 100 Hz)**. FNN analysis indicated **optimal dim = 5**. These parameters were applied to **all participants** assuming similar postural control dynamics across healthy adults.
 
 ### State-Space Reconstruction and Metrics
 
-Following parameter optimization, the preprocessed displacement signal x(t) was transformed into **four-dimensional state-space** using delay embedding vectors: **X(t) = [x(t), x(t-τ), x(t-2τ), x(t-3τ)]**. This reconstruction preserves **topological properties** of the original system dynamics (Takens' theorem), enabling **quantitative stability and recovery analysis**.
+Following parameter optimization, the preprocessed displacement signal **X(t)** was transformed into **five-dimensional state-space** using delay embedding vectors: **X(t) = [X(t), X(t-τ), X(t-2τ), X(t-3τ), X(t-4τ)]**. This reconstruction preserves **topological properties** of the original system dynamics (Takens' theorem), enabling **quantitative stability and recovery analysis**.
 
 Two primary resilience metrics were extracted:
 
 **Peak Deviation:** Maximum **Euclidean distance** from reference state (median state vector during pre-perturbation baseline) achieved following perturbation onset. Quantifies **magnitude of postural disruption**.
 
-**Recovery Time:** Duration required for state-space trajectory to **return within stability threshold**, defined as **2 × baseline variability (2 × SD** of pre-perturbation distances).
+**Recovery Time:** Duration required for the state-space trajectory to **return within baseline stability zones**, defined as **mean ± k·SD of Euclidean distances** in the reconstructed state-space during unperturbed walking (before first perturbation), with threshold zones **T₁ (mean + 1SD), T₂ (mean + 2SD), and T₃ (mean + 3SD)**.
 
 Perturbation detection used an **automated algorithm** identifying abrupt increases in state-space distance exceeding **baseline variability by factor 3**. This **threshold-based approach** enabled **unsupervised detection** without manual annotation. Following detection, metrics were extracted within temporal windows spanning **60 seconds (slow perturbations)** and **30 seconds (fast perturbations)**.
 
 ## Synchronization Framework
 
-Temporal alignment between CODAMOTION and BeatMove recordings required addressing independent system clocks without hardware synchronization. A cross-correlation approach computed normalized cross-correlation between CODAMOTION sacrum vertical acceleration (obtained by numerical differentiation of Z-position) and BeatMove IMU vertical acceleration across sliding temporal offsets.
+Temporal alignment between Codamotion and BeatMove recordings required addressing independent system clocks without hardware synchronization. A cross-correlation approach computed normalized cross-correlation between Codamotion sacrum vertical acceleration (obtained by numerical differentiation of Z-position) and BeatMove IMU vertical acceleration across sliding temporal offsets.
 
 The temporal offset yielding maximum correlation coefficient was selected as optimal alignment. Validation metrics included Pearson R², root mean square error (RMSE), mean temporal difference, and percentage of successfully matched step detection events. This framework was validated on two technical sessions (P016, P017) comprising treadmill walking with mat-crossing perturbations, establishing synchronization accuracy requirements for future adaptive auditory feedback studies.
 
@@ -483,71 +485,61 @@ The temporal offset yielding maximum correlation coefficient was selected as opt
 
 Validation of TDE parameter optimization used participant 004 as reference. **Average Mutual Information** analysis revealed clear first minimum at **τ = 19 samples (0.19 seconds)**, indicating **optimal decorrelation** between original and time-delayed signals. This delay corresponds approximately to **half the characteristic period of postural sway oscillations**, consistent with theoretical expectations for phase-space unfolding.
 
-**False Nearest Neighbors** analysis showed rapid decrease in false neighbor percentage from dimensions 1 to 4, falling below **10% threshold at dim = 4**. Further dimension increases yielded negligible improvement, confirming **dim = 4 as optimal**. This **four-dimensional representation** captures essential postural control dynamics without over-embedding.
+**False Nearest Neighbors** analysis showed rapid decrease in false neighbor percentage from dimensions 1 to 4, falling below **1% threshold at dim = 5**. Further dimension increases yielded negligible improvement, confirming **dim = 5 as optimal**. This **five-dimensional representation** captures essential postural control dynamics without over-embedding.
 
-```{r tde-params, fig.cap="**Figure 1. TDE Parameter Optimization for Participant 004.** Left: Average Mutual Information vs time delay with optimal τ=19 (red). Right: False Nearest Neighbors percentage vs embedding dimension with optimal dim=4 at 10% threshold (orange dashed line).", out.width="100%"}
+```{r tde-params, fig.cap="**Figure 1. TDE Parameter Optimization for Participant 004.** Left: Average Mutual Information vs time delay with optimal τ=19 (red). Right: False Nearest Neighbors percentage vs embedding dimension with optimal dim=5 at **1% threshold** (orange dashed line).", out.width="100%"}
 knitr::include_graphics("results/figures/004_tde_parameters.png")
 ```
 
-Optimized parameters **(τ=19, dim=4)** were applied **uniformly across all participants**, supported by literature demonstrating **consistent characteristic timescales and dimensionality** across healthy adults.
+Optimized parameters **(τ=19, dim=5)** were applied **uniformly across all participants**, supported by literature demonstrating **consistent characteristic timescales and dimensionality** across healthy adults.
+
+## Perturbation Detection Validation
+
+Detection of perturbation onset was performed automatically from the analog audio signal (beeps) using the BeatMove auditory cueing system. Inter-beep intervals were computed and compared to baseline cadence (mean of first 10 beeps). Perturbations were detected when 3 consecutive intervals deviated beyond ±15% tolerance bounds.
+
+```{r perturbation-detection, fig.cap="**Figure 2. Perturbation Detection Validation (P004).** Gray points = inter-beep intervals. Black dashed line = baseline (0.536s). Red dotted lines = tolerance thresholds (±15%). Blue marker = Slow perturbation onset (173.5s, interval 0.72s). Red marker = Fast perturbation onset (354.6s, interval 0.43s).", out.width="100%"}
+knitr::include_graphics("results/figures/004_perturbation_detection.png")
+```
+
+For participant 004, the algorithm correctly identified both perturbations: **Slow at 173.54s** (cadence decreased to 75% baseline) and **Fast at 354.61s** (cadence increased to 125% baseline). This automated detection enables systematic analysis across all participants without manual annotation.
 
 ## Recovery Dynamics Following Perturbations
 
 Temporal evolution of postural recovery was characterized by examining state-space distance trajectories for slow and fast perturbations in participant 004. Representative curves demonstrated distinct signatures for the two perturbation types.
 
-```{r recovery-curves, fig.cap="**Figure 2. Recovery Dynamics for Slow and Fast Perturbations (P004).** Upper: slow perturbation (peak **31.1 mm**, instant recovery). Lower: fast perturbation (peak **33.9 mm**, recovery **1.22 s**). Black line = distance from reference, colored lines = stability thresholds (T1/T2/T3), red star = perturbation onset, green star = recovery.", out.width="100%"}
+```{r recovery-curves, fig.cap="**Figure 3. Recovery Dynamics for Slow and Fast Perturbations (P004).** Upper: slow perturbation (peak **26.42 mm**, instant recovery). Lower: fast perturbation (peak **37.15 mm**, recovery **1.22 s**). Black line = distance from reference, colored lines = stability thresholds (T1/T2/T3), red star = perturbation onset, green star = recovery.", out.width="100%"}
 knitr::include_graphics("results/figures/004_recovery_curves.png")
 ```
 
-**Slow perturbations** elicited moderate **peak deviations (31.1 mm)** with **near-instantaneous recovery (0 seconds)**, suggesting **anticipatory or concurrent compensatory adjustments** during gradual perturbation development enabling continuous stability maintenance.
+**Slow perturbations** elicited moderate **peak deviations (26.42 mm)** with **near-instantaneous recovery (0 seconds)**, suggesting **anticipatory or concurrent compensatory adjustments** during gradual perturbation development enabling continuous stability maintenance.
 
-**Fast perturbations** produced larger **peaks (33.9 mm)** requiring measurable **recovery periods (1.22 seconds)**. Increased peak deviation reflects **limited anticipatory compensation capacity** during abrupt perturbations, forcing larger excursions from baseline. Subsequent recovery captures **reactive postural adjustments**, providing quantitative resilience measure.
+**Fast perturbations** produced larger **peaks (37.15 mm)** requiring measurable **recovery periods (1.22 seconds)**. Increased peak deviation reflects **limited anticipatory compensation capacity** during abrupt perturbations, forcing larger excursions from baseline. Subsequent recovery captures **reactive postural adjustments**, providing quantitative resilience measure.
 
 ### State-Space 3D Visualization
+Three-dimensional state-space reconstruction reveals the attractor structure with local stability ellipses computed from baseline variability in the Normal-Binormal plane.
 
-Three-dimensional state-space reconstructions reveal the attractor structure and perturbation dynamics of postural control. Interactive visualizations below display the phase-space trajectory (participant 004) alongside the reference trajectory (baseline gait pattern) and the T1 stability zone (±1σ boundary). The color-coded perturbation trajectory illustrates deviations from stable locomotion and subsequent recovery dynamics.
-
-```{r load-torus-functions, echo=FALSE, message=FALSE, warning=FALSE}
-# Load 3D visualization functions
-source("sources/r/torus_3d.R")
+```{r fig-torus, echo=FALSE, out.width="100%", fig.cap="**Figure 4.** State-space 3D visualization with local ellipses (Participant 010). **Purple line:** reference trajectory representing the average gait cycle. **Pink ellipses (1σ):** innermost stability zone. **Orange ellipses (2σ):** intermediate stability zone. **Yellow ellipses (3σ):** outer stability boundary. **Black trajectory:** sacrum vertical displacement showing natural gait variability within the ellipsoid torus structure."}
+knitr::include_graphics("results/figures/010_state_space_3d.jpg")
 ```
-
-#### Slow Perturbation Dynamics
-
-```{r torus-slow, echo=FALSE, message=FALSE, warning=FALSE, fig.height=7, fig.width=10, out.width="100%"}
-plot_torus_3d("results/figures/phase_space_SLOW.csv", 
-              "State-Space 3D — Slow Perturbation")
-```
-
-**Figure 3.** Interactive 3D state-space trajectory during slow perturbation (Participant 004). **Black line:** reference trajectory (baseline attractor). **Gray lines:** T1 stability zone (±1σ from reference). **Orange trajectory:** perturbation response showing minimal deviation and instantaneous return to baseline. Rotate visualization with mouse to explore attractor geometry from multiple perspectives.
-
-#### Fast Perturbation Dynamics
-
-```{r torus-fast, echo=FALSE, message=FALSE, warning=FALSE, fig.height=7, fig.width=10, out.width="100%"}
-plot_torus_3d("results/figures/phase_space_FAST.csv",
-              "State-Space 3D — Fast Perturbation")
-```
-
-**Figure 4.** Interactive 3D state-space trajectory during fast perturbation (Participant 004). **Black line:** reference trajectory. **Gray lines:** T1 stability zone. **Red trajectory:** perturbation response exhibiting pronounced excursion beyond stability boundaries and gradual recovery over 1.22 seconds. The spatial extent of the red trajectory relative to the gray baseline quantifies the magnitude of postural destabilization compared to the slow condition (Figure 3).
 
 ## Group Comparison: Young versus Aging Adults
 
-Comparison of resilience metrics between **young (n=5)** and **aging (n=2)** groups revealed **systematic differences in recovery dynamics**, particularly for **fast perturbations**.
+Comparison of resilience metrics between **young (n=6)** and **aging (n=2)** groups revealed **systematic differences in recovery dynamics**, particularly for **fast perturbations**.
 
 ```{r participant-table, echo=FALSE}
 participants_data <- data.frame(
-  Participant = c("004", "005", "006", "008", "009", "010", "017"),
-  Group = c("Young", "Young", "Aging", "Young", "Young", "Aging", "Young"),
-  Slow_Peak = c(26.42, 24.81, 30.15, 28.54, 26.83, 13.92, 40.69),
-  Slow_Recovery = c(0.00, 30.32, 18.52, 0.10, 0.00, 0.00, 4.46),
-  Fast_Peak = c(37.15, 32.36, 39.39, 31.76, 37.94, 14.56, 24.97),
-  Fast_Recovery = c(1.22, 6.00, 15.21, 15.32, 0.02, 11.46, 0.04)
+  Participant = c("004", "005", "006", "007", "008", "009", "010", "017"),
+  Group = c("Young", "Young", "Aging", "Young", "Young", "Young", "Aging", "Young"),
+  Slow_Peak = c(26.42, 24.81, 30.15, 24.81, 28.54, 26.83, 13.92, 40.69),
+  Slow_Recovery = c(0.00, 30.32, 18.52, 0.04, 0.10, 0.00, 0.00, 4.46),
+  Fast_Peak = c(37.15, 32.36, 39.39, NA, 31.76, 37.94, 14.56, 24.97),
+  Fast_Recovery = c(1.22, 6.00, 15.21, NA, 15.32, 0.02, 11.46, 0.04)
 )
 
 kable(participants_data,
       col.names = c("Participant", "Group", "Slow Peak (mm)", 
                     "Slow Recovery (s)", "Fast Peak (mm)", "Fast Recovery (s)"),
-      caption = "**Table 1. Resilience Metrics for All Participants (N=7).**",
+      caption = "**Table 1. Resilience Metrics for All Participants (N=8). Note: P007 Fast metrics unavailable due to data processing error.**",
       align = c('c', 'c', 'c', 'c', 'c', 'c'),
       digits = 2) %>%
   kable_styling(bootstrap_options = c("striped", "hover", "condensed"),
@@ -556,13 +548,13 @@ kable(participants_data,
   row_spec(0, bold = TRUE, background = "#667eea", color = "white")
 ```
 
-```{r peak-comparison, fig.cap="**Figure 5. Peak Deviation: Young vs Aging.** Left: slow perturbations. Right: fast perturbations. Boxplots show median, IQR, extremes. Outlier in young slow (P017: 40.7mm) indicates individual variation.", out.width="100%"}
+```{r peak-comparison, fig.cap="**Figure 6. Peak Deviation: Young vs Aging.** Left: slow perturbations. Right: fast perturbations. Boxplots show median, IQR, extremes. Outlier in young slow (P017: 40.7mm) indicates individual variation.", out.width="100%"}
 knitr::include_graphics("results/figures/peak_comparison.png")
 ```
 
 For slow perturbations, peak deviations showed **no consistent pattern** (Young: **27.26±5.87 mm**, Aging: **22.03±11.48 mm**), reflecting **small sample size** and **individual variability**. Recovery times exhibited greater variability within young group (**0.00-30.32s**) versus aging (**0.00-18.52s**).
 
-```{r recovery-comparison, fig.cap="**Figure 6. Recovery Time: Young vs Aging.** Left: slow (high variability in young). Right: fast showing clear separation - young median ~1s vs aging ~13s (three-fold difference).", out.width="100%"}
+```{r recovery-comparison, fig.cap="**Figure 7. Recovery Time: Young vs Aging.** Left: slow (high variability in young). Right: fast showing clear separation - young median ~1s vs aging ~13s (three-fold difference).", out.width="100%"}
 knitr::include_graphics("results/figures/recovery_comparison.png")
 ```
 
@@ -576,7 +568,7 @@ Fast perturbations revealed **pronounced group differences**. Young adults demon
 
 ## BeatMove Synchronization Validation
 
-Synchronization framework validation used **two technical sessions (P016, P017)** comprising treadmill walking with mat-crossing perturbations. **Cross-correlation analysis** between CODAMOTION and BeatMove vertical accelerations yielded **near-perfect alignment with R² > 0.999** for both sessions.
+Synchronization framework validation used **two technical sessions (P016, P017)** comprising **overground walking** with mat-crossing perturbations. **Cross-correlation analysis** between Codamotion and BeatMove vertical accelerations yielded **near-perfect alignment with R² > 0.999** for both sessions.
 
 Quantitative metrics: **Session 1 (P016)** - R²=0.9999982, RMSE=138.5ms, mean difference=13.8ms, SD=137.8ms, match rate=93.3% (501 matched/537 IMU/684 MOCAP steps). **Session 2 (P017)** - R²=0.9999977, RMSE=159.8ms, mean difference=-13.9ms, SD=159.2ms, match rate=92.4% (488/528/615 steps).
 
@@ -604,7 +596,7 @@ The study successfully developed and validated an **automated Time-Delay Embeddi
 
 This **age-related difference** aligns with established literature documenting postural control deterioration through **reduced muscle strength** limiting corrective torque, **delayed sensory integration** prolonging response latency, and **decreased adaptability** reducing compensatory effectiveness. Larger peak deviations for fast perturbations suggest **limited anticipatory compensation** when perturbations occur rapidly.
 
-The **CODAMOTION-BeatMove synchronization framework** achieved **near-perfect alignment (R²>0.999)** without hardware triggers, demonstrating **practical feasibility for real-time applications**. Match rates **>92%** despite marker occlusion confirm robustness under realistic experimental conditions.
+The **Codamotion-BeatMove synchronization framework** achieved **near-perfect alignment (R²>0.999)** without hardware triggers, demonstrating **practical feasibility for real-time applications**. Match rates **>92%** despite marker occlusion confirm robustness under realistic experimental conditions.
 
 ## Limitations
 
@@ -640,21 +632,29 @@ The developed tools contribute **methodologically validated infrastructure** to 
 
 # References
 
+Bruijn, S. M., Meijer, O. G., Beek, P. J., & van Dieën, J. H. (2013). Assessing the stability of human locomotion: A review of current measures. *Journal of the Royal Society Interface*, 10(83), 20120999. https://doi.org/10.1098/rsif.2012.0999
+
 Cochen De Cock, V., Dotov, D. G., Ihalainen, P., Bégel, V., Galtier, F., Lebrun, C., Picot, M. C., Driss, V., Landragin, N., Geny, C., Bardy, B., & Dalla Bella, S. (2018). Rhythmic abilities and musical training in Parkinson's disease: Do they help? *npj Parkinson's Disease*, 4, 8. https://doi.org/10.1038/s41531-018-0043-7
 
 Dalla Bella, S., Dotov, D., Bardy, B., & de Cock, V. C. (2018). Individualization of music-based rhythmic auditory cueing in Parkinson's disease. *Annals of the New York Academy of Sciences*, 1423(1), 308-317. https://doi.org/10.1111/nyas.13859
 
 Dotov, D. G., Cochen de Cock, V., Geny, C., Ihalainen, P., Moens, B., Leman, M., Bardy, B., & Dalla Bella, S. (2019). The role of interaction and predictability in the spontaneous entrainment of movement. *Journal of Experimental Psychology: General*, 148(6), 1041-1057. https://doi.org/10.1037/xge0000609
 
-Dufourneau, A. (2024). *Locomotor resilience dataset: Auditory perturbations during treadmill walking* [Unpublished raw data]. EuroMov Digital Health in Motion, University of Montpellier.
+Dufourneau, A. (2026). *Locomotor resilience analysis: Dataset and MATLAB processing pipeline* [Unpublished raw data and scripts]. EuroMov Digital Health in Motion, University of Montpellier.
 
 Fraser, A. M., & Swinney, H. L. (1986). Independent coordinates for strange attractors from mutual information. *Physical Review A*, 33(2), 1134-1140. https://doi.org/10.1103/PhysRevA.33.1134
+
+Horak, F. B. (2006). Postural orientation and equilibrium: What do we need to know about neural control of balance to prevent falls? *Age and Ageing*, 35(Suppl 2), ii7-ii11. https://doi.org/10.1093/ageing/afl077
 
 Huang, N. E., Shen, Z., Long, S. R., Wu, M. C., Shih, H. H., Zheng, Q., Yen, N.-C., Tung, C. C., & Liu, H. H. (1998). The empirical mode decomposition and the Hilbert spectrum for nonlinear and non-stationary time series analysis. *Proceedings of the Royal Society of London. Series A: Mathematical, Physical and Engineering Sciences*, 454(1971), 903-995. https://doi.org/10.1098/rspa.1998.0193
 
 Kennel, M. B., Brown, R., & Abarbanel, H. D. I. (1992). Determining embedding dimension for phase-space reconstruction using a geometrical construction. *Physical Review A*, 45(6), 3403-3411. https://doi.org/10.1103/PhysRevA.45.3403
 
+Mancini, M., & Horak, F. B. (2010). The relevance of clinical balance assessment tools to differentiate balance deficits. *European Journal of Physical and Rehabilitation Medicine*, 46(2), 239-248.
+
 Takens, F. (1981). Detecting strange attractors in turbulence. In D. Rand & L. S. Young (Eds.), *Dynamical Systems and Turbulence, Warwick 1980* (Lecture Notes in Mathematics, Vol. 898, pp. 366-381). Springer. https://doi.org/10.1007/BFb0091924
+
+World Health Organization. (2021). *Falls*. https://www.who.int/news-room/fact-sheets/detail/falls
 
 ---
 
