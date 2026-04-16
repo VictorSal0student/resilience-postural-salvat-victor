@@ -65,8 +65,8 @@ def plot_ami_fnn(ami_values: np.ndarray, fnn_rates: np.ndarray,
     ax2.plot(dims, fnn_rates * 100, 's-', linewidth=1.5, markersize=6)
     ax2.plot(dim_optimal, fnn_rates[dim_optimal - 1] * 100, 'ro',
              markersize=10, label=f'Optimal dim = {dim_optimal}')
-    ax2.axhline(y=10, color='orange', linestyle='--', linewidth=2, 
-                alpha=0.7, label='Threshold (10%)')
+    ax2.axhline(y=1, color='orange', linestyle='--', linewidth=2,  # MODIFIÉ : 10 → 1
+                alpha=0.7, label='Threshold (1%)')                  # MODIFIÉ : 10% → 1%
     ax2.set_xlabel('Embedding Dimension', fontweight='bold')
     ax2.set_ylabel('False Nearest Neighbors (%)', fontweight='bold')
     ax2.set_title('FNN - Dimension Selection', fontweight='bold')
@@ -170,57 +170,113 @@ def plot_recovery_curves(time: np.ndarray, distances: np.ndarray,
     save_path : str, optional
         Path to save figure
     """
-    fig, axes = plt.subplots(2, 1, figsize=(14, 8), sharex=True)
+    from scipy.signal import savgol_filter
     
-    T1, T2, T3 = thresholds['T1'], thresholds['T2'], thresholds['T3']
-    zones = thresholds['zones']
+    fig, axes = plt.subplots(2, 1, figsize=(16, 10))
+    fig.suptitle('Recovery Dynamics Analysis', fontsize=18, fontweight='bold', y=0.995)
     
-    for i, (ax, pert_name) in enumerate(zip(axes, ['slow', 'fast'])):
-        # Distance curve
-        ax.plot(time, distances, 'k-', linewidth=1, alpha=0.7, label='Distance to Reference')
+    perturbations_list = [
+        ('slow_time', 'slow', 'Slow Perturbation Recovery', 0),
+        ('fast_time', 'fast', 'Fast Perturbation Recovery', 1)
+    ]
+    
+    for pert_key, metrics_key, title, idx in perturbations_list:
+        ax = axes[idx]
+        pert_time = perturbations[pert_key]
         
-        # Thresholds
-        ax.axhline(T1, color='green', linestyle='--', linewidth=2, 
-                   alpha=0.7, label='T1 (Very Stable)')
-        ax.axhline(T2, color='orange', linestyle='--', linewidth=2,
-                   alpha=0.7, label='T2 (Stable)')
-        ax.axhline(T3, color='red', linestyle='--', linewidth=2,
-                   alpha=0.7, label='T3 (Unstable)')
+        if np.isnan(pert_time):
+            ax.text(0.5, 0.5, f'No {pert_key.split("_")[0]} perturbation detected',
+                    ha='center', va='center', fontsize=14, transform=ax.transAxes)
+            ax.set_title(title, fontsize=14, fontweight='bold', pad=10)
+            continue
         
-        # Perturbation timing
-        pert_time = perturbations['perturbation_times'][i]
-        if not np.isnan(pert_time):
-            ax.axvline(pert_time, color='purple', linestyle=':', linewidth=2,
-                      label=f'Perturbation ({perturbations["perturbation_labels"][i]})')
-            
-            # Peak and recovery markers
-            if pert_name in metrics and not np.isnan(metrics[pert_name]['peak_value']):
-                peak_idx = metrics[pert_name]['peak_idx']
-                peak_time = time[peak_idx]
-                peak_val = metrics[pert_name]['peak_value']
+        window_before = 30
+        window_after = 70
+        start_idx = max(0, int((pert_time - window_before) * 100))
+        end_idx = min(len(distances), int((pert_time + window_after) * 100))
+        
+        distances_window = distances[start_idx:end_idx]
+        time_window = time[start_idx:end_idx]
+        
+        window_length = min(51, len(distances_window) if len(distances_window) % 2 == 1 else len(distances_window) - 1)
+        if window_length < 5:
+            window_length = 5
+        distances_smooth = savgol_filter(distances_window, window_length=window_length, polyorder=3)
+        
+        ax.plot(time_window, distances_smooth, 'k-', linewidth=2, label='Distance to Reference', zorder=3)
+        
+        ax.axhline(thresholds['T1'], color='green', linestyle='--', linewidth=2.5, 
+                   label='T1 (Very Stable)', alpha=0.8, zorder=2)
+        ax.axhline(thresholds['T2'], color='orange', linestyle='--', linewidth=2.5, 
+                   label='T2 (Stable)', alpha=0.8, zorder=2)
+        ax.axhline(thresholds['T3'], color='red', linestyle='--', linewidth=2.5, 
+                   label='T3 (Unstable)', alpha=0.8, zorder=2)
+        
+        ax.axvline(pert_time, color='purple', linestyle=':', linewidth=2, alpha=0.6, zorder=1)
+        
+        m = metrics[metrics_key]
+        recovery_time = m['recovery_time']
+        
+        peak_idx = np.argmax(distances_smooth)
+        max_distance = distances_smooth[peak_idx]
+        max_time = time_window[peak_idx]
+        
+        ax.plot(max_time, max_distance, 'r*', markersize=20, markeredgewidth=2, 
+                markeredgecolor='darkred', label=f'Perturbation ({metrics_key.capitalize()})', zorder=5)
+        ax.text(max_time, max_distance + 4, f'Peak\n({max_distance:.1f}mm)', 
+                ha='center', va='bottom', fontsize=11, fontweight='bold',
+                bbox=dict(boxstyle='round', facecolor='lightyellow', edgecolor='red', alpha=0.9))
+        
+        if recovery_time == 0:
+            ax.text(pert_time + 10, thresholds['T1'] + 2, 'Instant Recovery', 
+                    ha='left', va='bottom', fontsize=12, fontweight='bold',
+                    bbox=dict(boxstyle='round', facecolor='lightgreen', edgecolor='green', 
+                             alpha=0.9, linewidth=2))
+        else:
+            recovery_idx_rel = np.where((time_window > max_time) & (distances_smooth <= thresholds['T1']))[0]
+            if len(recovery_idx_rel) > 0:
+                recovery_idx = recovery_idx_rel[0]
+                recovery_point_time = time_window[recovery_idx]
+                recovery_point_dist = distances_smooth[recovery_idx]
                 
-                ax.plot(peak_time, peak_val, 'r*', markersize=15,
-                       label=f'Peak ({peak_val:.1f} mm)')
+                arrow_y = max_distance * 0.65
+                ax.annotate('', xy=(recovery_point_time, arrow_y),
+                           xytext=(max_time, arrow_y),
+                           arrowprops=dict(arrowstyle='<->', color='darkgreen', lw=3, alpha=0.9),
+                           zorder=4)
                 
-                if not np.isnan(metrics[pert_name]['recovery_time']):
-                    recovery_idx = metrics[pert_name]['recovery_idx']
-                    recovery_time = time[recovery_idx]
-                    recovery_val = distances[recovery_idx]
-                    
-                    ax.plot(recovery_time, recovery_val, 'g*', markersize=15,
-                           label=f'Recovery ({metrics[pert_name]["recovery_time"]:.2f}s)')
+                mid_time = (max_time + recovery_point_time) / 2
+                ax.text(mid_time, arrow_y - 3, f'Recovery {recovery_time:.2f}s', 
+                       ha='center', va='top', fontsize=11, fontweight='bold',
+                       color='white',
+                       bbox=dict(boxstyle='round,pad=0.5', facecolor='darkgreen', 
+                                edgecolor='green', alpha=0.95, linewidth=2),
+                       zorder=4)
+                
+                ax.plot(recovery_point_time, recovery_point_dist, 'g*', markersize=20, 
+                        markeredgewidth=2, markeredgecolor='darkgreen', 
+                        label=f'Recovery ({recovery_time:.2f}s)', zorder=6)
+                
+                ax.axvline(recovery_point_time, color='green', linestyle=':', 
+                          linewidth=1.5, alpha=0.5, zorder=1)
         
-        ax.set_ylabel('Distance (mm)', fontweight='bold')
-        ax.set_title(f'{perturbations["perturbation_labels"][i]} Perturbation Recovery',
-                     fontweight='bold', fontsize=12)
-        ax.legend(loc='upper right', fontsize=9)
-        ax.grid(True, alpha=0.3)
+        ax.set_xlabel('Time (s)', fontsize=13, fontweight='bold')
+        ax.set_ylabel('Distance (mm)', fontsize=13, fontweight='bold')
+        ax.set_title(title, fontsize=14, fontweight='bold', pad=10)
+        
+        ax.legend(loc='upper right', fontsize=9, framealpha=0.95, edgecolor='black', 
+                  markerscale=0.8, handletextpad=0.8, labelspacing=0.6)
+        
+        ax.grid(True, alpha=0.3, linestyle='--', linewidth=0.5)
+        ax.set_facecolor('#f0f0f0')
+        
+        y_max = max(max_distance, thresholds['T3']) * 1.15
+        ax.set_ylim(0, y_max)
     
-    axes[1].set_xlabel('Time (s)', fontweight='bold')
     plt.tight_layout()
     
     if save_path:
-        plt.savefig(save_path, dpi=300, bbox_inches='tight')
+        plt.savefig(save_path, dpi=300, bbox_inches='tight', facecolor='white')
         print(f"  Saved: {save_path}")
     
     return fig
